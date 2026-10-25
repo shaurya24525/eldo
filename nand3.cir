@@ -1,38 +1,29 @@
-
 * simulation
 * PRE-LAYOUT ELDO SIMULATION
 * SS, VDD = 1.08 V, TEMP = 125 C, CLOAD = 20 fF
 
-
 * Include SS corner file
 .include /modelfile_65nm/minNminP.cir
-
 
 * Include source netlist exported from Cadence
 .include nand3.src.net
 
-
 * Instantiate the NAND3
 X1 gnd a b c y vdd nand3
-
 
 * Parameters
 .param SUPPLY = 1.08
 .param tend = 120n
 
-
 * Temperature
 .TEMP = 125
-
 
 * Output load capacitance
 C y gnd 20f
 
-
 * Power supply
 vd vdd 0 SUPPLY
 vg gnd 0 0
-
 
 * Input signals
 * (time voltage)
@@ -73,7 +64,6 @@ v3 c gnd PWL (0 0
 ************************************************************************
 
 * Input A
-
 * Low-to-High propagation delay
 .measure tran tplh_a
 + TRIG v(a) VAL='SUPPLY/2' FALL=1 TD=83n
@@ -85,11 +75,9 @@ v3 c gnd PWL (0 0
 + TARG v(y) VAL='SUPPLY/2' FALL=1 TD=89n
 
 * Average propagation delay
-.measure tpd_a param = ('tplh_a+tphl_a'/2)
-
+.measure tpd_a PARAM='(tplh_a+tphl_a)/2'
 
 * Input B
-
 * Low-to-High propagation delay
 .measure tran tplh_b
 + TRIG v(b) VAL='SUPPLY/2' FALL=1 TD=95n
@@ -101,11 +89,9 @@ v3 c gnd PWL (0 0
 + TARG v(y) VAL='SUPPLY/2' FALL=1 TD=101n
 
 * Average propagation delay
-.measure tpd_b param = ('tplh_b+tphl_b'/2)
-
+.measure tpd_b PARAM='(tplh_b+tphl_b)/2'
 
 * Input C
-
 * Low-to-High propagation delay
 .measure tran tplh_c
 + TRIG v(c) VAL='SUPPLY/2' FALL=1 TD=107n
@@ -117,57 +103,32 @@ v3 c gnd PWL (0 0
 + TARG v(y) VAL='SUPPLY/2' FALL=1 TD=113n
 
 * Average propagation delay
-.measure tpd_c param = ('tplh_c+tphl_c'/2)
-
+.measure tpd_c PARAM='(tplh_c+tphl_c)/2'
 
 ************************************************************************
 * Powrr
 ************************************************************************
 
 * Static power
-
-.measure tran Istatic000 AVG I(VD) FROM=5n TO=9n
-.measure Pstatic000 PARAM='-SUPPLY*Istatic000'
-
-.measure tran Istatic001 AVG I(VD) FROM=15n TO=19n
-.measure Pstatic001 PARAM='-SUPPLY*Istatic001'
-
-.measure tran Istatic010 AVG I(VD) FROM=25n TO=29n
-.measure Pstatic010 PARAM='-SUPPLY*Istatic010'
-
-.measure tran Istatic011 AVG I(VD) FROM=35n TO=39n
-.measure Pstatic011 PARAM='-SUPPLY*Istatic011'
-
-.measure tran Istatic100 AVG I(VD) FROM=45n TO=49n
-.measure Pstatic100 PARAM='-SUPPLY*Istatic100'
-
-.measure tran Istatic101 AVG I(VD) FROM=55n TO=59n
-.measure Pstatic101 PARAM='-SUPPLY*Istatic101'
-
-.measure tran Istatic110 AVG I(VD) FROM=65n TO=69n
-.measure Pstatic110 PARAM='-SUPPLY*Istatic110'
-
-.measure tran Istatic111 AVG I(VD) FROM=75n TO=79n
-.measure Pstatic111 PARAM='-SUPPLY*Istatic111'
-
+.measure tran Pstatic000 AVG PAR('-SUPPLY*I(VD)') FROM=5n TO=9n
+.measure tran Pstatic001 AVG PAR('-SUPPLY*I(VD)') FROM=15n TO=19n
+.measure tran Pstatic010 AVG PAR('-SUPPLY*I(VD)') FROM=25n TO=29n
+.measure tran Pstatic011 AVG PAR('-SUPPLY*I(VD)') FROM=35n TO=39n
+.measure tran Pstatic100 AVG PAR('-SUPPLY*I(VD)') FROM=45n TO=49n
+.measure tran Pstatic101 AVG PAR('-SUPPLY*I(VD)') FROM=55n TO=59n
+.measure tran Pstatic110 AVG PAR('-SUPPLY*I(VD)') FROM=65n TO=69n
+.measure tran Pstatic111 AVG PAR('-SUPPLY*I(VD)') FROM=75n TO=79n
 
 * Dynamic power
-
-.measure tran Idynamic AVG I(VD) FROM=84n TO=89n
-.measure Pdynamic PARAM='-SUPPLY*Idynamic-Pstatic011'
-
+.measure tran Pdynamic AVG PAR('-SUPPLY*I(VD)') FROM=84n TO=89n
 
 * Average power
-
-.measure tran Itotal AVG I(VD) FROM=0n TO=120n
-.measure Paverage PARAM='-SUPPLY*Itotal'
-
+.measure tran Paverage AVG PAR('-SUPPLY*I(VD)') FROM=0n TO=120n
 
 ************************************************************************
 * TRANSIENT SIMULATION
 ************************************************************************
 
 .tran 1p tend 0 2p
-
 
 .end
