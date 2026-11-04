@@ -1,0 +1,130 @@
+
+* simulation
+* PRE-LAYOUT ELDO SIMULATION - 2 INPUT XOR (12T Static CMOS)
+* SS, VDD = 1.08 V, TEMP = 125 C, CLOAD = 20 fF
+* Input 0-to-100% transition time = 10 ps
+
+* Include SS corner file
+.include /modelfile_65nm/minNminP.cir
+
+* Include source netlist exported from Cadence
+.include xor.src.net
+
+* Instantiate the XOR
+X1 gnd a b y vdd xor
+
+* Parameters
+.param SUPPLY = 1.08
+.param tend = 120n
+
+* Temperature
+.TEMP = 125
+
+* Output load capacitance
+C y gnd 20f
+
+* Power supply
+vd vdd 0 SUPPLY
+vg gnd 0 0
+
+* Input signals
+* Eight single-input transitions
+* A,B: 00 -> 10 -> 11 -> 01 -> 00
+*      -> 01 -> 11 -> 10 -> 00
+
+v1 a gnd PWL (0 0
++ 10n 0 10.01n 'SUPPLY'
++ 30n 'SUPPLY' 30.01n 0
++ 60n 0 60.01n 'SUPPLY'
++ 80n 'SUPPLY' 80.01n 0
++ 120n 0)
+
+v2 b gnd PWL (0 0
++ 20n 0 20.01n 'SUPPLY'
++ 40n 'SUPPLY' 40.01n 0
++ 50n 0 50.01n 'SUPPLY'
++ 70n 'SUPPLY' 70.01n 0
++ 120n 0)
+
+* Probe voltages and currents
+.probe v(*) v(X1.*)
+.probe i(*)
+
+************************************************************************
+* PROPAGATION DELAY (50% input to 50% output)
+************************************************************************
+
+* Input A switching, B held at 0
+.measure tran tplh_a_b0
++ TRIG v(a) VAL='SUPPLY/2' RISE=1 TD=9n
++ TARG v(y) VAL='SUPPLY/2' RISE=1 TD=9n
+
+.measure tran tphl_a_b0
++ TRIG v(a) VAL='SUPPLY/2' FALL=1 TD=79n
++ TARG v(y) VAL='SUPPLY/2' FALL=1 TD=79n
+
+.measure tran tpd_a_b0 PARAM='(tplh_a_b0+tphl_a_b0)/2'
+
+* Input A switching, B held at 1
+.measure tran tplh_a_b1
++ TRIG v(a) VAL='SUPPLY/2' FALL=1 TD=29n
++ TARG v(y) VAL='SUPPLY/2' RISE=1 TD=29n
+
+.measure tran tphl_a_b1
++ TRIG v(a) VAL='SUPPLY/2' RISE=1 TD=59n
++ TARG v(y) VAL='SUPPLY/2' FALL=1 TD=59n
+
+.measure tran tpd_a_b1 PARAM='(tplh_a_b1+tphl_a_b1)/2'
+
+* Input B switching, A held at 0
+.measure tran tplh_b_a0
++ TRIG v(b) VAL='SUPPLY/2' RISE=1 TD=49n
++ TARG v(y) VAL='SUPPLY/2' RISE=1 TD=49n
+
+.measure tran tphl_b_a0
++ TRIG v(b) VAL='SUPPLY/2' FALL=1 TD=39n
++ TARG v(y) VAL='SUPPLY/2' FALL=1 TD=39n
+
+.measure tran tpd_b_a0 PARAM='(tplh_b_a0+tphl_b_a0)/2'
+
+* Input B switching, A held at 1
+.measure tran tplh_b_a1
++ TRIG v(b) VAL='SUPPLY/2' FALL=1 TD=69n
++ TARG v(y) VAL='SUPPLY/2' RISE=1 TD=69n
+
+.measure tran tphl_b_a1
++ TRIG v(b) VAL='SUPPLY/2' RISE=1 TD=19n
++ TARG v(y) VAL='SUPPLY/2' FALL=1 TD=19n
+
+.measure tran tpd_b_a1 PARAM='(tplh_b_a1+tphl_b_a1)/2'
+
+* Average propagation delay
+.measure tran tpd_avg
++ PARAM='(tplh_a_b0+tphl_a_b0+tplh_a_b1+tphl_a_b1+tplh_b_a0+tphl_b_a0+tplh_b_a1+tphl_b_a1)/8'
+
+************************************************************************
+* POWER
+************************************************************************
+
+* Static power
+.measure tran Pstatic00 AVG PAR('-SUPPLY*I(VD)') FROM=45n TO=49n
+.measure tran Pstatic01 AVG PAR('-SUPPLY*I(VD)') FROM=35n TO=39n
+.measure tran Pstatic10 AVG PAR('-SUPPLY*I(VD)') FROM=15n TO=19n
+.measure tran Pstatic11 AVG PAR('-SUPPLY*I(VD)') FROM=25n TO=29n
+
+.measure tran Pstatic_avg
++ PARAM='(Pstatic00+Pstatic01+Pstatic10+Pstatic11)/4'
+
+* Average power over switching cycles
+.measure tran Paverage AVG PAR('-SUPPLY*I(VD)') FROM=10n TO=90n
+
+* Dynamic power
+.measure tran Pdynamic PARAM='Paverage-Pstatic_avg'
+
+************************************************************************
+* TRANSIENT SIMULATION
+************************************************************************
+
+.tran 1p tend 0 2p
+
+.end
